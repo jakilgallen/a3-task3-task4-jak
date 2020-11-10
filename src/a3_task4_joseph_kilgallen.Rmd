@@ -1,0 +1,93 @@
+---
+title: "a3_task4_joseph_kilgallen"
+author: "Joseph Kilgallen"
+date: "11/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(here)
+```
+
+## Reading in the data
+- here I will load in the data and do some minor data cleaning to ensure workability
+```{r}
+urchins <- read_csv(here("data", "urchins.csv"))
+# now going to clean names so that I can get all variables in snake case/tidy format
+urchins_clean <- clean_names(urchins)
+```
+
+# 1. Exploratory Data Analysis
+In this section I will compare the mean size of purple urchins across the treatment groups. Specifically, lookibg to understand the differences between purple urchins in purple urchins in CONTROL (no giant kelp removal) or ANNUAL (annual kelp removal) sections of Naples Reef in January 2010. 
+
+## Data Wrangling 
+- Here I wrangle the urchins data to only include Naples Reef observations for purple urchins observed in January 2010.
+```{r}
+treatment_urchins <- urchins_clean %>% 
+  mutate(date_new = mdy(date)) %>% 
+  mutate(year_new = year(date_new)) %>% 
+  mutate(month_new = month(date_new)) %>% 
+  select("site", "size", "treatment", "common_name", "year_new", "month_new", "date_new") %>% 
+  filter(common_name == "Purple Urchin", site == "NAPL", year_new == 2010, month_new == 1) %>% 
+  group_by(treatment)
+```
+ 
+## Exploratory Data vizualization
+- Here I look at and consider histograms and QQ-plots for the size distribution for each of the treatments (Control and Annual) to assess normality. 
+```{r}
+# here is the good ole histogram comparing urchin size by treatment type
+ggplot(treatment_urchins, aes(x= size)) +
+  geom_histogram() +
+  facet_wrap(~treatment) 
+
+# and now a qqplot again examining the previously mentioned relationship
+ggplot(treatment_urchins, aes(sample= size)) +
+  geom_qq()+
+  facet_wrap(~treatment)
+```
+### Takeaways from exploratory data viz
+- All in all it appears that both groups (annual and control) are relatively normally distributed, though we see a stronger negative skew in the control group. 
+
+## Creating descriptive stats of the samples
+- Below I create a basic table of descriptive statistics for both the treatment and control groups of purple urchins from the Naples Reef, January, 2010
+```{r}
+treatment_summary <- treatment_urchins %>% 
+  group_by(treatment) %>% 
+  summarize(mean = mean(size), median = median(size), standard_deviation= sd(size), sample_size= n())
+treatment_summary
+```
+
+
+## Comparing the means between the treatment and control groups!
+- Here I perform a two-sample t-test to compare means between the two treatment groups 
+```{r}
+# Now I will compare the means between the two groups
+
+# first adding  a subset data frame with just treatment and sizes
+treatment_subset <- treatment_urchins %>% 
+  select(treatment, size)
+
+# then I calculate the means for each treatment type separately so I can run the two sample t-test
+mean_treatment <- treatment_subset %>% 
+  filter(treatment == "ANNUAL") %>% 
+  pull(size)
+
+mean_control <- treatment_subset %>% 
+  filter(treatment == "CONTROL") %>% 
+ pull(size)
+
+# now I will run the t-test
+t_test_treatments <- t.test(mean_treatment, mean_control)
+t_test_treatments
+```
+### Results Discussed
+
+The differences between the control and treatment group sizes when compared proved statistically insignificant (p-value= 0.2536). This finding appears credible in light of the actual mean values for both groups (control mean = 3.72 cm vs. treatment mean = 3.91 cm), standard deviations (control = 0.8668646 vs. treatment = 0.9662380), as well as the small absolute and percent difference in means ( absolute diff= roughly 0.2cm and % difference = 0.048). All in all the two samples appear to be quite similar, thus leading to our current acceptance of the null hypothesis, i.e. that these two sample means were drawn from the same population. That being said there is a chance that we may be making a type 1 error here due to the currently small sample size. If the treatment effect size is present but small, increasing our sample size may allow for better detection of the treatment effect.
+
+More specifically the resultant p-value of 0.25 means that: there is a 25% probability that if we drew these samples from the same population they would have means at least this different. Thus with such a large probability we have insufficient evidence to reject our null hypothesis. 
+
+
