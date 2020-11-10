@@ -382,6 +382,7 @@ summary {
 <h2>Reading in the data</h2>
 <ul>
 <li>here I will load in the data and do some minor data cleaning to ensure workability</li>
+<li>mostly converting things to snake case</li>
 </ul>
 <pre class="r"><code>urchins &lt;- read_csv(here(&quot;data&quot;, &quot;urchins.csv&quot;))
 # now going to clean names so that I can get all variables in snake case/tidy format
@@ -392,7 +393,7 @@ urchins_clean &lt;- clean_names(urchins)</code></pre>
 <h1>1. Section 1: Data Exploration</h1>
 <div id="exploratory-data-visualization" class="section level2">
 <h2>Exploratory Data Visualization</h2>
-<p>Here I compare the distribution of sizes between purple and red urchins using both histograms and boxplots.</p>
+<p>Here I compare the distribution of urchin diameter between purple and red urchins using both histograms and boxplots as exploratory visuals.</p>
 <pre class="r"><code>ggplot(urchins_clean, aes(x = size, color = common_name)) +
   geom_histogram(bins = 20) +
   facet_wrap(~common_name) +
@@ -409,7 +410,8 @@ urchins_clean &lt;- clean_names(urchins)</code></pre>
 <div id="descriptives-statistics-table" class="section level2">
 <h2>Descriptives Statistics Table</h2>
 <p>Here I create a summary table examining the characteristics of both purple and red urchins.</p>
-<pre class="r"><code>urchins_descriptives &lt;- urchins_clean %&gt;% 
+<pre class="r"><code># here i group the data by their common names and then run summary stas.
+urchins_descriptives &lt;- urchins_clean %&gt;% 
   group_by(common_name) %&gt;% 
   summarize(mean = mean(size), median = median(size), standard_deviation= sd(size), sample_size= n())
 

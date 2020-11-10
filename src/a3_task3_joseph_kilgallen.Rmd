@@ -19,6 +19,7 @@ library(here)
 
 ## Reading in the data
 - here I will load in the data and do some minor data cleaning to ensure workability
+- mostly converting things to snake case
 ```{r}
 urchins <- read_csv(here("data", "urchins.csv"))
 # now going to clean names so that I can get all variables in snake case/tidy format
@@ -29,7 +30,7 @@ urchins_clean <- clean_names(urchins)
 
 ## Exploratory Data Visualization
 
-Here I compare the distribution of sizes between purple and red urchins using both histograms and boxplots.
+Here I compare the distribution of urchin diameter between purple and red urchins using both histograms and boxplots as exploratory visuals.
 
 ```{r}
 ggplot(urchins_clean, aes(x = size, color = common_name)) +
@@ -50,6 +51,7 @@ ggplot(urchins_clean, aes(x = common_name, y= size, color = common_name)) +
 Here I create a summary table examining the characteristics of both purple and red urchins.
 
 ```{r}
+# here i group the data by their common names and then run summary stas.
 urchins_descriptives <- urchins_clean %>% 
   group_by(common_name) %>% 
   summarize(mean = mean(size), median = median(size), standard_deviation= sd(size), sample_size= n())
